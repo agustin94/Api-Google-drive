@@ -1,6 +1,8 @@
+#!/usr/bin/node
+
 const fs = require('fs');
 const readline = require('readline');
-const {google} = require('googleapis');
+const {google} = require('/usr/lib/node_modules/googleapis');
 
 // If modifying these scopes, delete token.json.
 //const SCOPES = ['https://www.googleapis.com/auth/drive'];
@@ -8,15 +10,8 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.readonly', 'https://www.g
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = 'token.json';
-
-// Load client secrets from a local file.
-fs.readFile('credentials.json', (err, content) => {
-  if (err) return console.log('Error loading client secret file:', err);
-  // Authorize a client with credentials, then call the Google Docs API.
-  authorize(JSON.parse(content), listFiles);
-});
-
+const TOKEN_PATH = '/root/token.json';
+  
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
  * given callback function.
@@ -29,11 +24,14 @@ function authorize(credentials, callback) {
       client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getNewToken(oAuth2Client, callback);
+  try{
+    const token = fs.readFileSync(TOKEN_PATH)
     oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client);
-  });
+    callback(oAuth2Client)
+  } catch(err){
+    console.log(err)
+      // getNewToken(oAuth2Client, callback);
+  }
 }
 
 /**
@@ -48,11 +46,13 @@ function getNewToken(oAuth2Client, callback) {
     scope: SCOPES,
   });
   console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
+    
+    const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-  });
-  rl.question('Enter the code from that page here: ', (code) => {
+
+    });
+    rl.question('Enter the code from that page here: ', (code) => {
     rl.close();
     oAuth2Client.getToken(code, (err, token) => {
       if (err) return console.error('Error retrieving access token', err);
@@ -81,7 +81,7 @@ function getNewToken(oAuth2Client, callback) {
     console.log(`The title of the document is: ${res.data.title}`);
   });
 }*/
-function listFiles(auth) {
+const listFiles = (auth) => {
   const drive = google.drive({version: 'v3', auth});
   drive.files.list({
     pageSize: 10,
@@ -98,9 +98,14 @@ function listFiles(auth) {
       console.log('No files found.');
     }
   });
+
+
 }
 
-module.exports = {
-  SCOPES,
-  listFiles,
-};
+// Load client secrets from a local file.
+let content = fs.readFileSync('/root/credentials.json')
+content = JSON.parse(content)
+
+  // Authorize a client with credentials, then call the Google Docs API.
+authorize(content, listFiles)
+
